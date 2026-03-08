@@ -14,6 +14,61 @@ description: Multi-agent collaborative development. Gemini designs UI/UX (design
 | Claude Code | fill `// TODO` function bodies only | change CSS/HTML structure |
 | Codex | write review report | modify any code |
 
+## First Run: Prerequisites Check
+
+On first trigger, check if `~/.openclaw/skills/collab-dev/.ready` exists. If yes, skip to Phase 0. If not, run:
+
+```bash
+READY=1
+
+# 1. Gemini CLI
+GEMINI=$(which gemini 2>/dev/null)
+if [ -n "$GEMINI" ]; then
+  echo "✅ Gemini CLI: $($GEMINI --version 2>&1 | head -1)"
+else
+  echo "❌ Gemini CLI 未安装"; READY=0
+fi
+
+# 2. Claude Code CLI
+CLAUDE=$(which claude 2>/dev/null)
+if [ -n "$CLAUDE" ]; then
+  echo "✅ Claude Code: $($CLAUDE --version 2>&1 | head -1)"
+else
+  echo "❌ Claude Code 未安装"; READY=0
+fi
+
+# 3. Codex CLI
+CODEX=$(which codex 2>/dev/null)
+if [ -n "$CODEX" ]; then
+  echo "✅ Codex CLI: $($CODEX --version 2>&1 | head -1)"
+else
+  echo "❌ Codex CLI 未安装"; READY=0
+fi
+
+# 4. ACP config (optional but recommended)
+ACPX_CFG="$HOME/.acpx/config.json"
+if [ -f "$ACPX_CFG" ]; then
+  echo "✅ ACP 配置: $ACPX_CFG"
+else
+  echo "⚠️ ACP 配置未找到（可选，OpenClaw 内置 ACP 也可用）"
+fi
+```
+
+If any ❌, show install guide and stop:
+
+| Tool | Install | Auth |
+|------|---------|------|
+| Gemini CLI | `npm i -g @google/gemini-cli` | `gemini` (首次运行自动引导登录) |
+| Claude Code | `npm i -g @anthropic-ai/claude-code` | `claude` (首次运行自动引导登录) |
+| Codex CLI | `npm i -g @openai/codex` | `codex` (首次运行自动引导登录) |
+
+Tell user: "装好后再说一次「协作开发」即可。"
+
+If all ✅, write marker and proceed:
+```bash
+touch ~/.openclaw/skills/collab-dev/.ready
+```
+
 ## Workflow
 
 ### Phase 0: Spec (OpenClaw)
