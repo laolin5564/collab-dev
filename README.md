@@ -9,11 +9,11 @@
 > [!IMPORTANT]
 > **使用前请确保已安装并登录以下 CLI 工具：**
 > 
-> | 工具 | 安装 | 登录 |
-> |------|------|------|
-> | [Gemini CLI](https://github.com/anthropics/gemini-cli) | `npm i -g @google/gemini-cli` | 运行 `gemini`，按提示登录 Google 账号 |
-> | [Claude Code](https://github.com/anthropics/claude-code) | `npm i -g @anthropic-ai/claude-code` | 运行 `claude`，按提示完成浏览器 OAuth |
-> | [Codex CLI](https://github.com/openai/codex) | `npm i -g @openai/codex` | 运行 `codex`，按提示登录 OpenAI 账号 |
+> | 工具 | 安装 |
+> |------|------|
+> | [Gemini CLI](https://github.com/google-gemini/gemini-cli) | `npm i -g @google/gemini-cli` |
+> | [Claude Code](https://docs.anthropic.com/en/docs/claude-code) | `npm i -g @anthropic-ai/claude-code` |
+> | [Codex CLI](https://github.com/openai/codex) | `npm i -g @openai/codex` |
 > 
 > 安装遇到问题？→ 查看 [troubleshooting.md](references/troubleshooting.md)
 
