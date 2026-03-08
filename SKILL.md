@@ -75,15 +75,29 @@ touch ~/.openclaw/skills/collab-dev/.ready
 
 ### Phase -1: PRD (OpenClaw, if needed)
 
-If user only provides a brief idea (e.g. "做一个番茄钟"), generate a PRD first. Read [references/prd-guide.md](references/prd-guide.md) for template and conversion rules.
+If user only provides a brief idea (e.g. "做一个番茄钟"), clarify requirements before generating PRD.
 
-Steps:
-1. Ask user to describe the product idea (or use what they already said)
-2. Generate PRD with: user stories, feature list (P0/P1/P2), data model, interaction patterns, acceptance criteria
-3. Show PRD to user for confirmation
-4. Convert PRD → spec.md (see prd-guide.md §PRD → spec.md Conversion)
+**Step 1: Requirement Clarification (ask until clear)**
 
-Skip if user already provides a detailed spec or PRD.
+Ask user these questions one round at a time (don't dump all at once). Stop asking when answers are sufficient:
+
+1. **Target users**: Who will use this? (e.g. individuals, teams, specific audience)
+2. **Core problem**: What problem does it solve? What's the user's current pain?
+3. **Key features**: What are the 3-5 most important things it must do?
+4. **Data ownership**: Is data shared (all users see same) or private (each user owns)?
+5. **Real-time needs**: Does anything need live updates across tabs/users?
+6. **Auth**: Does it need login/registration?
+7. **Platform**: Desktop-first, mobile-first, or both equally?
+
+Skip questions the user already answered. If user says "你决定" or "随便", make reasonable defaults and state them.
+
+**Step 2: Generate PRD**
+
+Read [references/prd-guide.md](references/prd-guide.md) for template. Generate PRD with user stories, feature list (P0/P1/P2), data model, interaction patterns, acceptance criteria.
+
+**Step 3: User confirms PRD → convert to spec.md**
+
+Skip Phase -1 entirely if user already provides a detailed spec or PRD.
 
 ### Phase 0: Spec (OpenClaw)
 
