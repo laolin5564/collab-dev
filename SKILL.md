@@ -64,46 +64,7 @@ If any ❌, show install guide and stop:
 
 Tell user: "装好后再说一次「协作开发」即可。"
 
-### Post-install Verification
-
-After CLI tools are installed, verify deeper integration:
-
-```bash
-# 5. Claude Code auth — must complete browser OAuth first
-claude --version 2>&1 | head -1
-# If "not authenticated" or permission errors → user must run `claude` in terminal and complete browser OAuth
-# ⚠️ macOS: SSH session cannot write OAuth to Keychain. User must run `claude` locally (not via SSH).
-
-# 6. Codex auth — separate from OpenClaw auth
-codex --version 2>&1 | head -1
-# ⚠️ Codex uses ~/.codex/auth.json, OpenClaw uses ~/.openclaw/agents/main/agent/auth-profiles.json
-# These are independent. If one expires, the other still works. Sync manually if needed.
-
-# 7. OpenClaw ACP permissionMode — must be approve-all for unattended writes
-# Check openclaw.json: plugins.acpx.config.permissionMode should be "approve-all"
-# Default "approve-reads" blocks file writes → Claude Code ACP fails with exit code 5
-
-# 8. Gemini ACP config (if using ACP, not CLI mode)
-# ~/.acpx/config.json must override: {"agents":{"gemini":{"command":"gemini --experimental-acp"}}}
-# Without --experimental-acp, Gemini ACP sessions lose the prompt
-# Also: gemini must be in acp.allowedAgents (openclaw.json)
-
-# 9. ACP session cleanup
-# ACP has a max concurrent session limit (default 3). Stale sessions pile up.
-ls ~/.acpx/sessions/ 2>/dev/null | wc -l
-# If >10, clean: rm ~/.acpx/sessions/*.json
-```
-
-### Common Pitfalls (check if any error occurs)
-
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| Claude Code ACP exits with code 5 | `permissionMode: "approve-reads"` (default) blocks writes | Set `plugins.acpx.config.permissionMode` to `"approve-all"` in openclaw.json |
-| Gemini ACP prompt lost | `gemini` command missing `--experimental-acp` flag | Add to `~/.acpx/config.json`: `{"agents":{"gemini":{"command":"gemini --experimental-acp"}}}` |
-| Codex works but OpenClaw says token expired | Codex CLI and OpenClaw use separate auth files | Sync `~/.codex/auth.json` token to OpenClaw `auth-profiles.json` |
-| Claude Code auth fails via SSH | macOS Keychain requires local terminal | User must run `claude` directly on the machine (not SSH), complete browser OAuth |
-| ACP spawn fails "max sessions" | Stale sessions in `~/.acpx/sessions/` | Clean: `rm ~/.acpx/sessions/*.json` |
-| Gemini ACP never succeeds | Known issue: Gemini ACP is unreliable | Use `gemini -p` CLI mode instead (this skill defaults to CLI mode) |
+**安装遇到问题？** → 读 [references/troubleshooting.md](references/troubleshooting.md)（涵盖 OAuth、ACP 权限、双 auth 不同步、session 堆积等 6 个常见坑）
 
 If all ✅, write marker and proceed:
 ```bash
