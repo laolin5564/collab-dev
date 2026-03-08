@@ -73,6 +73,18 @@ touch ~/.openclaw/skills/collab-dev/.ready
 
 ## Workflow
 
+### Phase -1: PRD (OpenClaw, if needed)
+
+If user only provides a brief idea (e.g. "做一个番茄钟"), generate a PRD first. Read [references/prd-guide.md](references/prd-guide.md) for template and conversion rules.
+
+Steps:
+1. Ask user to describe the product idea (or use what they already said)
+2. Generate PRD with: user stories, feature list (P0/P1/P2), data model, interaction patterns, acceptance criteria
+3. Show PRD to user for confirmation
+4. Convert PRD → spec.md (see prd-guide.md §PRD → spec.md Conversion)
+
+Skip if user already provides a detailed spec or PRD.
+
 ### Phase 0: Spec (OpenClaw)
 
 Write `spec.md` with:

@@ -77,7 +77,10 @@ collab-dev 让 **4 个 Agent 各司其职**：
 ## 工作流（10-17 分钟）
 
 ```
-Phase 0   OpenClaw 写 spec.md
+Phase -1  OpenClaw 根据描述生成 PRD（用户故事 + 功能清单 + 验收标准）
+            └── 用户确认后继续
+              ↓
+Phase 0   OpenClaw 从 PRD 提取 spec.md
             ├── 数据模型 · 功能优先级 · API 设计 · 验收标准
             └── ⚠️ 不写 UI 风格提示（留给 Gemini）
               ↓
@@ -246,7 +249,7 @@ multi-agent build 一个投票系统
 8. OpenClaw 根据 review 修复问题 → 交付
 ```
 
-**全程自动，预计 10-17 分钟。** 你只需要在第 1 步描述需求，第 2 步确认 spec。
+**全程自动，预计 10-17 分钟。** 你只需要描述需求（一句话就行），OpenClaw 会先生成 PRD 确认，再自动走完全流程。
 
 ### 输出文件
 
