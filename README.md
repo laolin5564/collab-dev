@@ -28,13 +28,13 @@ collab-dev 让 **4 个 Agent 各司其职**：
 ### Solo（左）vs 协作（右）实际对比
 
 **桌面端**：协作版双栏布局 + 渐变色系统，Solo 版单栏朴素布局
-![桌面端对比](assets/comparison-desktop.png)
+![桌面端对比](assets/comparison-desktop.jpg)
 
 **移动端**：协作版保持双栏自适应，Solo 版线性堆叠
-![移动端对比](assets/comparison-mobile.png)
+![移动端对比](assets/comparison-mobile.jpg)
 
 **登录页**：Solo 版全屏沉浸式，协作版模态弹窗 + 背景可见
-![登录页对比](assets/comparison-login.png)
+![登录页对比](assets/comparison-login.jpg)
 
 > 以上截图来自第 7 轮双盲测试（Pomodoro 番茄钟），左侧 Solo 版由 Claude Code 独立完成，右侧协作版由 Gemini + Claude Code + Codex 协作完成。
 
@@ -180,6 +180,21 @@ mkdir -p ~/.openclaw/skills/collab-dev
 curl -o ~/.openclaw/skills/collab-dev/SKILL.md \
   https://raw.githubusercontent.com/laolin5564/collab-dev/master/SKILL.md
 ```
+
+## 💡 想先看实际效果？
+
+[examples/](examples/) 里有第 7 轮双盲测试的**完整源码**，可以直接运行对比：
+
+```bash
+git clone https://github.com/laolin5564/collab-dev.git
+cd collab-dev/examples/pomodoro-collab && npm install && PORT=3001 node server.js
+# 另一个终端
+cd collab-dev/examples/pomodoro-solo && npm install && PORT=3002 node server.js
+```
+
+打开 `localhost:3001`（协作版）和 `localhost:3002`（Solo 版），自己看、自己判断。
+
+详细评分 → [examples/README.md](examples/README.md)
 
 ## 使用
 

@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pomodoro — 番茄钟</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --transition:0.4s cubic-bezier(.4,0,.2,1);
+  /* Light theme */
+  --bg:#f8f6f3;--bg2:#fff;--bg3:#f0ede8;
+  --text:#2c2c2c;--text2:#6b6b6b;--text3:#999;
+  --border:#e5e1db;
+  --focus:#e74c3c;--focus-glow:rgba(231,76,60,.15);
+  --short:#27ae60;--short-glow:rgba(39,174,96,.15);
+  --long:#2980b9;--long-glow:rgba(41,128,185,.15);
+  --accent:#e74c3c;--accent2:#c0392b;
+  --card-shadow:0 2px 16px rgba(0,0,0,.06);
+  --bar-bg:#e5e1db;
+  --danger:#e74c3c;--danger-hover:#c0392b;
+  --success:#27ae60;
+  --modal-bg:rgba(0,0,0,.3);
+}
+[data-theme="dark"]{
+  --bg:#1a1a2e;--bg2:#16213e;--bg3:#0f3460;
+  --text:#e4e4e4;--text2:#a0a0b0;--text3:#6a6a7a;
+  --border:#2a2a4a;
+  --focus:#ff6b6b;--focus-glow:rgba(255,107,107,.2);
+  --short:#51cf66;--short-glow:rgba(81,207,102,.2);
+  --long:#74b9ff;--long-glow:rgba(116,185,255,.2);
+  --accent:#ff6b6b;--accent2:#ee5a5a;
+  --card-shadow:0 2px 20px rgba(0,0,0,.3);
+  --bar-bg:#2a2a4a;
+  --danger:#ff6b6b;--danger-hover:#ee5a5a;
+  --success:#51cf66;
+  --modal-bg:rgba(0,0,0,.6);
+}
+html{transition:background var(--transition),color var(--transition)}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;transition:background var(--transition),color var(--transition);
+  line-height:1.6;
+}
+a{color:var(--accent);text-decoration:none}
+
+/* Layout */
+.app{max-width:480px;margin:0 auto;padding:16px 16px 80px}
+.header{display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin-bottom:8px}
+.header h1{font-size:1.3rem;font-weight:700;letter-spacing:-0.5px}
+.header-right{display:flex;align-items:center;gap:8px}
+.online-badge{font-size:.75rem;color:var(--text3);display:flex;align-items:center;gap:4px}
+.online-dot{width:6px;height:6px;border-radius:50%;background:var(--success);display:inline-block}
+
+/* Buttons */
+.btn{
+  border:none;cursor:pointer;border-radius:10px;font-size:.9rem;font-weight:600;
+  padding:10px 20px;transition:all var(--transition);display:inline-flex;align-items:center;gap:6px;
+}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--text2);padding:8px}
+.btn-ghost:hover{color:var(--text);background:var(--bg3)}
+.btn-sm{padding:6px 12px;font-size:.8rem;border-radius:8px}
+.btn-danger{background:transparent;color:var(--danger);border:1px solid var(--danger)}
+.btn-danger:hover{background:var(--danger);color:#fff}
+.btn-icon{background:none;border:none;cursor:pointer;padding:6px;border-radius:8px;color:var(--text2);transition:all var(--transition);display:flex;align-items:center}
+.btn-icon:hover{color:var(--text);background:var(--bg3)}
+
+/* Theme toggle */
+.theme-toggle{
+  width:40px;height:40px;border-radius:50%;border:none;cursor:pointer;
+  background:var(--bg3);color:var(--text2);font-size:1.1rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:all var(--transition);
+}
+.theme-toggle:hover{background:var(--border);color:var(--text)}
+
+/* Cards */
+.card{
+  background:var(--bg2);border-radius:16px;padding:24px;
+  box-shadow:var(--card-shadow);margin-bottom:16px;
+  transition:background var(--transition),box-shadow var(--transition);
+}
+
+/* Auth */
+.auth-container{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:20px;background:var(--bg);transition:background var(--transition);
+}
+.auth-card{
+  background:var(--bg2);border-radius:20px;padding:40px 32px;width:100%;max-width:380px;
+  box-shadow:0 8px 40px rgba(0,0,0,.08);transition:all var(--transition);
+}
+.auth-card h2{font-size:1.5rem;text-align:center;margin-bottom:8px}
+.auth-card p{text-align:center;color:var(--text2);font-size:.9rem;margin-bottom:24px}
+.auth-card .theme-toggle{position:absolute;top:20px;right:20px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:.85rem;font-weight:600;margin-bottom:6px;color:var(--text2)}
+.form-group input{
+  width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;
+  font-size:.95rem;background:var(--bg);color:var(--text);
+  transition:all var(--transition);outline:none;
+}
+.form-group input:focus{border-color:var(--accent)}
+.auth-btn{width:100%;padding:14px;font-size:1rem;border-radius:12px;margin-top:8px}
+.auth-switch{text-align:center;margin-top:16px;font-size:.85rem;color:var(--text2)}
+.auth-switch a{cursor:pointer;font-weight:600}
+.auth-error{color:var(--danger);font-size:.85rem;text-align:center;margin-top:12px;min-height:1.2em}
+
+/* Timer */
+.timer-section{text-align:center;padding:8px 0}
+.mode-tabs{display:flex;gap:4px;background:var(--bg3);border-radius:12px;padding:4px;margin-bottom:24px}
+.mode-tab{
+  flex:1;padding:10px 8px;border:none;border-radius:10px;cursor:pointer;
+  font-size:.85rem;font-weight:600;background:transparent;color:var(--text2);
+  transition:all var(--transition);
+}
+.mode-tab.active{background:var(--bg2);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.mode-tab.active[data-mode="focus"]{color:var(--focus)}
+.mode-tab.active[data-mode="shortBreak"]{color:var(--short)}
+.mode-tab.active[data-mode="longBreak"]{color:var(--long)}
+
+.timer-ring-container{position:relative;width:260px;height:260px;margin:0 auto 24px}
+.timer-ring-container svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:var(--bg3);stroke-width:8;transition:stroke var(--transition)}
+.ring-progress{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke var(--transition)}
+.ring-progress.focus{stroke:var(--focus)}
+.ring-progress.shortBreak{stroke:var(--short)}
+.ring-progress.longBreak{stroke:var(--long)}
+.timer-display{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  text-align:center;
+}
+.timer-time{font-size:3.2rem;font-weight:700;letter-spacing:-2px;font-variant-numeric:tabular-nums}
+.timer-label{font-size:.85rem;color:var(--text2);margin-top:2px}
+.timer-controls{display:flex;gap:12px;justify-content:center;margin-bottom:8px}
+.timer-controls .btn{min-width:100px}
+.timer-flash{animation:flash .5s ease-in-out 3}
+@keyframes flash{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Task selector under timer */
+.task-selector{margin-top:16px;text-align:center}
+.task-selector select{
+  padding:8px 14px;border:2px solid var(--border);border-radius:10px;
+  background:var(--bg);color:var(--text);font-size:.85rem;
+  max-width:240px;width:100%;outline:none;cursor:pointer;
+  transition:all var(--transition);
+}
+.task-selector select:focus{border-color:var(--accent)}
+.task-selector label{font-size:.8rem;color:var(--text3);display:block;margin-bottom:4px}
+
+/* Tasks */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.section-title{font-size:1.05rem;font-weight:700}
+.task-input-row{display:flex;gap:8px;margin-bottom:16px}
+.task-input-row input[type="text"]{
+  flex:1;padding:10px 14px;border:2px solid var(--border);border-radius:10px;
+  font-size:.9rem;background:var(--bg);color:var(--text);outline:none;
+  transition:border var(--transition);
+}
+.task-input-row input[type="text"]:focus{border-color:var(--accent)}
+.task-input-row input[type="number"]{
+  width:60px;padding:10px 8px;border:2px solid var(--border);border-radius:10px;
+  font-size:.9rem;background:var(--bg);color:var(--text);outline:none;text-align:center;
+  transition:border var(--transition);
+}
+.task-input-row input[type="number"]:focus{border-color:var(--accent)}
+.task-list{list-style:none}
+.task-item{
+  display:flex;align-items:center;gap:10px;padding:12px 0;
+  border-bottom:1px solid var(--border);transition:opacity var(--transition);
+}
+.task-item:last-child{border-bottom:none}
+.task-item.completed .task-name{text-decoration:line-through;color:var(--text3)}
+.task-check{
+  width:22px;height:22px;border-radius:50%;border:2px solid var(--border);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all var(--transition);flex-shrink:0;background:transparent;color:transparent;
+  font-size:.7rem;
+}
+.task-check:hover{border-color:var(--success)}
+.task-check.checked{background:var(--success);border-color:var(--success);color:#fff}
+.task-name{flex:1;font-size:.9rem}
+.task-pomodoros{font-size:.8rem;color:var(--text3);white-space:nowrap}
+.task-delete{
+  background:none;border:none;cursor:pointer;color:var(--text3);
+  padding:4px;font-size:1rem;transition:color var(--transition);display:flex;
+}
+.task-delete:hover{color:var(--danger)}
+.no-tasks{text-align:center;color:var(--text3);font-size:.9rem;padding:20px 0}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+.stat-item{text-align:center;padding:16px 8px;background:var(--bg3);border-radius:12px;transition:background var(--transition)}
+.stat-value{font-size:1.8rem;font-weight:700;color:var(--accent)}
+.stat-label{font-size:.75rem;color:var(--text2);margin-top:2px}
+
+/* Chart */
+.chart-container{margin-top:8px}
+.chart-title{font-size:.9rem;font-weight:600;margin-bottom:12px}
+.bar-chart{display:flex;align-items:flex-end;gap:8px;height:120px;padding:0 4px}
+.bar-wrapper{flex:1;display:flex;flex-direction:column;align-items:center;height:100%}
+.bar-value{font-size:.7rem;color:var(--text3);margin-bottom:4px}
+.bar{
+  width:100%;border-radius:6px 6px 0 0;background:var(--accent);
+  transition:height .6s cubic-bezier(.4,0,.2,1),background var(--transition);
+  min-height:2px;position:relative;
+}
+.bar-label{font-size:.7rem;color:var(--text3);margin-top:6px}
+
+/* User bar */
+.user-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 0;font-size:.85rem;color:var(--text2);margin-bottom:8px;
+}
+.user-bar .username{font-weight:600;color:var(--text)}
+
+/* Modal */
+.modal-overlay{
+  position:fixed;top:0;left:0;right:0;bottom:0;background:var(--modal-bg);
+  display:flex;align-items:center;justify-content:center;z-index:100;
+  transition:opacity var(--transition);padding:20px;
+}
+.hidden{display:none!important}
+
+/* Responsive */
+@media(max-width:480px){
+  .app{padding:12px 12px 80px}
+  .timer-ring-container{width:220px;height:220px}
+  .timer-time{font-size:2.6rem}
+  .stats-grid{grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .stat-value{font-size:1.4rem}
+  .auth-card{padding:28px 20px}
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- AUTH VIEW -->
+<div id="authView" class="auth-container">
+  <div style="position:relative;width:100%;max-width:380px">
+    <button class="theme-toggle" onclick="toggleTheme()" style="position:absolute;top:-48px;right:0" aria-label="切换主题">🌙</button>
+    <div class="auth-card">
+      <h2 id="authTitle">登录</h2>
+      <p id="authSubtitle">专注每一刻</p>
+      <div class="form-group">
+        <label>用户名</label>
+        <input type="text" id="authUsername" placeholder="请输入用户名" maxlength="50" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>密码</label>
+        <input type="password" id="authPassword" placeholder="请输入密码" maxlength="100" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary auth-btn" id="authSubmitBtn" onclick="handleAuth()">登录</button>
+      <div class="auth-error" id="authError"></div>
+      <div class="auth-switch">
+        <span id="authSwitchText">还没有账号？</span>
+        <a id="authSwitchLink" onclick="switchAuthMode()">注册</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP VIEW -->
+<div id="appView" class="app hidden">
+  <div class="header">
+    <h1>🍅 番茄钟</h1>
+    <div class="header-right">
+      <span class="online-badge"><span class="online-dot"></span><span id="onlineCount">0</span> 在线</span>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="切换主题" id="themeBtn">🌙</button>
+    </div>
+  </div>
+
+  <div class="user-bar">
+    <span>你好，<span class="username" id="displayUsername"></span></span>
+    <button class="btn-icon" onclick="handleLogout()" title="登出">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+  </div>
+
+  <!-- Timer Card -->
+  <div class="card" id="timerCard">
+    <div class="timer-section">
+      <div class="mode-tabs">
+        <button class="mode-tab active" data-mode="focus" onclick="switchMode('focus')">专注</button>
+        <button class="mode-tab" data-mode="shortBreak" onclick="switchMode('shortBreak')">短休息</button>
+        <button class="mode-tab" data-mode="longBreak" onclick="switchMode('longBreak')">长休息</button>
+      </div>
+      <div class="timer-ring-container" id="timerRingContainer">
+        <svg viewBox="0 0 260 260">
+          <circle class="ring-bg" cx="130" cy="130" r="115"/>
+          <circle class="ring-progress focus" id="ringProgress" cx="130" cy="130" r="115"
+            stroke-dasharray="722.57" stroke-dashoffset="0"/>
+        </svg>
+        <div class="timer-display">
+          <div class="timer-time" id="timerDisplay">25:00</div>
+          <div class="timer-label" id="timerModeLabel">专注时间</div>
+        </div>
+      </div>
+      <div class="timer-controls">
+        <button class="btn btn-primary" id="startBtn" onclick="toggleTimer()">开始</button>
+        <button class="btn btn-ghost" onclick="resetTimer()">重置</button>
+      </div>
+      <div class="task-selector">
+        <label>关联任务</label>
+        <select id="taskSelect"><option value="">— 无 —</option></select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tasks Card -->
+  <div class="card">
+    <div class="section-header">
+      <span class="section-title">今日任务</span>
+    </div>
+    <div class="task-input-row">
+      <input type="text" id="taskNameInput" placeholder="添加新任务…" maxlength="100">
+      <input type="number" id="taskEstInput" placeholder="🍅" min="1" max="20" value="1" title="预估番茄数">
+      <button class="btn btn-primary btn-sm" onclick="addTask()">添加</button>
+    </div>
+    <ul class="task-list" id="taskList"></ul>
+    <div class="no-tasks hidden" id="noTasks">还没有任务，添加一个吧</div>
+  </div>
+
+  <!-- Stats Card -->
+  <div class="card">
+    <div class="section-header">
+      <span class="section-title">统计</span>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-value" id="statCount">0</div>
+        <div class="stat-label">今日番茄</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="statMinutes">0</div>
+        <div class="stat-label">专注分钟</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="statStreak">0</div>
+        <div class="stat-label">连续天数</div>
+      </div>
+    </div>
+    <div class="chart-container">
+      <div class="chart-title">最近 7 天</div>
+      <div class="bar-chart" id="barChart"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// State
+let token = localStorage.getItem('pomo_token');
+let username = localStorage.getItem('pomo_username');
+let isLoginMode = true;
+let currentMode = 'focus';
+let totalSeconds = 25 * 60;
+let remainingSeconds = totalSeconds;
+let timerInterval = null;
+let isRunning = false;
+let tasks = [];
+let connectionId = null;
+let eventSource = null;
+
+const MODES = {
+  focus: { label: '专注时间', minutes: 25, color: 'focus' },
+  shortBreak: { label: '短休息', minutes: 5, color: 'shortBreak' },
+  longBreak: { label: '长休息', minutes: 15, color: 'longBreak' },
+};
+const CIRCUMFERENCE = 2 * Math.PI * 115; // ~722.57
+
+// Theme
+function initTheme() {
+  const saved = localStorage.getItem('pomo_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  updateThemeIcon(saved);
+}
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('pomo_theme', next);
+  updateThemeIcon(next);
+}
+function updateThemeIcon(theme) {
+  const icon = theme === 'dark' ? '☀️' : '🌙';
+  document.querySelectorAll('.theme-toggle').forEach(b => b.textContent = icon);
+}
+initTheme();
+
+// Audio
+function playNotification() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 200, 400].forEach(delay => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 800;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.3, ctx.currentTime + delay / 1000);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + delay / 1000 + 0.3);
+      osc.start(ctx.currentTime + delay / 1000);
+      osc.stop(ctx.currentTime + delay / 1000 + 0.3);
+    });
+  } catch {}
+}
+
+// API helper
+async function api(path, options = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+    if (connectionId) headers['X-Connection-Id'] = String(connectionId);
+  }
+  const res = await fetch(path, { ...options, headers: { ...headers, ...options.headers } });
+  if (res.status === 401) { handleLogout(); throw new Error('Unauthorized'); }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+// Auth
+function showAuth() {
+  document.getElementById('authView').classList.remove('hidden');
+  document.getElementById('appView').classList.add('hidden');
+}
+function showApp() {
+  document.getElementById('authView').classList.add('hidden');
+  document.getElementById('appView').classList.remove('hidden');
+  document.getElementById('displayUsername').textContent = username;
+  loadTasks();
+  loadStats();
+  connectSSE();
+}
+function switchAuthMode() {
+  isLoginMode = !isLoginMode;
+  document.getElementById('authTitle').textContent = isLoginMode ? '登录' : '注册';
+  document.getElementById('authSubtitle').textContent = isLoginMode ? '专注每一刻' : '创建你的账号';
+  document.getElementById('authSubmitBtn').textContent = isLoginMode ? '登录' : '注册';
+  document.getElementById('authSwitchText').textContent = isLoginMode ? '还没有账号？' : '已有账号？';
+  document.getElementById('authSwitchLink').textContent = isLoginMode ? '注册' : '登录';
+  document.getElementById('authError').textContent = '';
+}
+async function handleAuth() {
+  const u = document.getElementById('authUsername').value.trim();
+  const p = document.getElementById('authPassword').value;
+  const errEl = document.getElementById('authError');
+  errEl.textContent = '';
+  if (!u || !p) { errEl.textContent = '请填写用户名和密码'; return; }
+  try {
+    const endpoint = isLoginMode ? '/api/auth/login' : '/api/auth/register';
+    const data = await api(endpoint, { method: 'POST', body: JSON.stringify({ username: u, password: p }) });
+    token = data.token; username = data.username;
+    localStorage.setItem('pomo_token', token);
+    localStorage.setItem('pomo_username', username);
+    showApp();
+  } catch (e) {
+    errEl.textContent = e.message;
+  }
+}
+function handleLogout() {
+  token = null; username = null;
+  localStorage.removeItem('pomo_token');
+  localStorage.removeItem('pomo_username');
+  if (eventSource) { eventSource.close(); eventSource = null; }
+  resetTimer();
+  showAuth();
+}
+
+// Handle enter key on auth inputs
+document.getElementById('authUsername').addEventListener('keydown', e => { if (e.key === 'Enter') handleAuth(); });
+document.getElementById('authPassword').addEventListener('keydown', e => { if (e.key === 'Enter') handleAuth(); });
+
+// Timer
+function updateTimerDisplay() {
+  const m = Math.floor(remainingSeconds / 60);
+  const s = remainingSeconds % 60;
+  document.getElementById('timerDisplay').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  // Update ring
+  const fraction = 1 - (remainingSeconds / totalSeconds);
+  const offset = CIRCUMFERENCE * fraction;
+  document.getElementById('ringProgress').setAttribute('stroke-dashoffset', -offset);
+}
+function switchMode(mode) {
+  if (isRunning) return; // Don't switch while running
+  currentMode = mode;
+  totalSeconds = MODES[mode].minutes * 60;
+  remainingSeconds = totalSeconds;
+  document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+  document.getElementById('timerModeLabel').textContent = MODES[mode].label;
+  const ring = document.getElementById('ringProgress');
+  ring.className.baseVal = 'ring-progress ' + mode;
+  updateTimerDisplay();
+}
+function toggleTimer() {
+  if (isRunning) {
+    pauseTimer();
+  } else {
+    startTimer();
+  }
+}
+function startTimer() {
+  if (remainingSeconds <= 0) return;
+  isRunning = true;
+  document.getElementById('startBtn').textContent = '暂停';
+  document.getElementById('startBtn').classList.remove('btn-primary');
+  document.getElementById('startBtn').style.background = 'var(--bg3)';
+  document.getElementById('startBtn').style.color = 'var(--text)';
+  timerInterval = setInterval(() => {
+    remainingSeconds--;
+    updateTimerDisplay();
+    if (remainingSeconds <= 0) {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      isRunning = false;
+      document.getElementById('startBtn').textContent = '开始';
+      document.getElementById('startBtn').classList.add('btn-primary');
+      document.getElementById('startBtn').style.background = '';
+      document.getElementById('startBtn').style.color = '';
+      onTimerComplete();
+    }
+  }, 1000);
+}
+function pauseTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  isRunning = false;
+  document.getElementById('startBtn').textContent = '继续';
+  document.getElementById('startBtn').classList.add('btn-primary');
+  document.getElementById('startBtn').style.background = '';
+  document.getElementById('startBtn').style.color = '';
+}
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+  isRunning = false;
+  remainingSeconds = totalSeconds;
+  document.getElementById('startBtn').textContent = '开始';
+  document.getElementById('startBtn').classList.add('btn-primary');
+  document.getElementById('startBtn').style.background = '';
+  document.getElementById('startBtn').style.color = '';
+  updateTimerDisplay();
+}
+async function onTimerComplete() {
+  playNotification();
+  document.getElementById('timerRingContainer').classList.add('timer-flash');
+  setTimeout(() => document.getElementById('timerRingContainer').classList.remove('timer-flash'), 2500);
+  // Record pomodoro
+  try {
+    const taskId = document.getElementById('taskSelect').value || null;
+    await api('/api/pomodoros', {
+      method: 'POST',
+      body: JSON.stringify({ taskId: taskId ? parseInt(taskId, 10) : null, mode: currentMode, duration: MODES[currentMode].minutes })
+    });
+    loadTasks();
+    loadStats();
+  } catch {}
+}
+
+// Tasks
+async function loadTasks() {
+  try {
+    tasks = await api('/api/tasks');
+    renderTasks();
+    updateTaskSelect();
+  } catch {}
+}
+function renderTasks() {
+  const list = document.getElementById('taskList');
+  const noTasks = document.getElementById('noTasks');
+  if (tasks.length === 0) {
+    list.innerHTML = '';
+    noTasks.classList.remove('hidden');
+    return;
+  }
+  noTasks.classList.add('hidden');
+  list.innerHTML = tasks.map(t => `
+    <li class="task-item ${t.completed ? 'completed' : ''}">
+      <button class="task-check ${t.completed ? 'checked' : ''}" onclick="toggleTask(${t.id}, ${t.completed ? 0 : 1})" aria-label="标记完成">✓</button>
+      <span class="task-name">${escapeHtml(t.taskName)}</span>
+      <span class="task-pomodoros">${t.completedPomodoros}/${t.estimatedPomodoros} 🍅</span>
+      <button class="task-delete" onclick="deleteTask(${t.id})" aria-label="删除任务">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </li>
+  `).join('');
+}
+function updateTaskSelect() {
+  const sel = document.getElementById('taskSelect');
+  const current = sel.value;
+  const incomplete = tasks.filter(t => !t.completed);
+  sel.innerHTML = '<option value="">— 无 —</option>' +
+    incomplete.map(t => `<option value="${t.id}" ${t.id == current ? 'selected' : ''}>${escapeHtml(t.taskName)}</option>`).join('');
+}
+async function addTask() {
+  const nameInput = document.getElementById('taskNameInput');
+  const estInput = document.getElementById('taskEstInput');
+  const name = nameInput.value.trim();
+  const est = parseInt(estInput.value, 10);
+  if (!name) return;
+  if (!est || est < 1 || est > 20) return;
+  try {
+    await api('/api/tasks', { method: 'POST', body: JSON.stringify({ taskName: name, estimatedPomodoros: est }) });
+    nameInput.value = '';
+    estInput.value = '1';
+    loadTasks();
+  } catch {}
+}
+async function toggleTask(id, completed) {
+  try {
+    await api(`/api/tasks/${id}`, { method: 'PUT', body: JSON.stringify({ completed: !!completed }) });
+    loadTasks();
+  } catch {}
+}
+async function deleteTask(id) {
+  try {
+    await api(`/api/tasks/${id}`, { method: 'DELETE' });
+    loadTasks();
+  } catch {}
+}
+
+// Enter key for task input
+document.getElementById('taskNameInput').addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+
+// Stats
+async function loadStats() {
+  try {
+    const stats = await api('/api/stats');
+    document.getElementById('statCount').textContent = stats.today.count;
+    document.getElementById('statMinutes').textContent = stats.today.minutes;
+    document.getElementById('statStreak').textContent = stats.streak;
+    renderChart(stats.week);
+  } catch {}
+}
+function renderChart(week) {
+  const chart = document.getElementById('barChart');
+  const maxCount = Math.max(...week.map(d => d.count), 1);
+  const days = ['日','一','二','三','四','五','六'];
+  chart.innerHTML = week.map(d => {
+    const date = new Date(d.date + 'T00:00:00');
+    const dayLabel = days[date.getDay()];
+    const height = Math.max((d.count / maxCount) * 100, 2);
+    return `<div class="bar-wrapper">
+      <span class="bar-value">${d.count || ''}</span>
+      <div class="bar" style="height:${height}%;margin-top:auto"></div>
+      <span class="bar-label">${dayLabel}</span>
+    </div>`;
+  }).join('');
+}
+
+// SSE
+function connectSSE() {
+  if (eventSource) eventSource.close();
+  if (!token) return;
+  eventSource = new EventSource(`/api/stream?token=${encodeURIComponent(token)}`);
+  eventSource.onmessage = (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      if (data.connectionId) connectionId = data.connectionId;
+    } catch {}
+  };
+  eventSource.addEventListener('tasksUpdated', () => loadTasks());
+  eventSource.addEventListener('pomodoroCompleted', () => loadStats());
+  eventSource.addEventListener('onlineCount', (e) => {
+    try {
+      const data = JSON.parse(e.data);
+      document.getElementById('onlineCount').textContent = data.count;
+    } catch {}
+  });
+  eventSource.onerror = () => {
+    // Will auto-reconnect
+  };
+}
+
+// Utils
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// Init
+if (token && username) {
+  showApp();
+} else {
+  showAuth();
+}
+</script>
+</body>
+</html>
